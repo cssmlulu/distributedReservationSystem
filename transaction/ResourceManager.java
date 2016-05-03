@@ -18,6 +18,8 @@ public interface ResourceManager extends Remote {
     public boolean dieNow() 
 	throws RemoteException;
 
+    //API for WC
+    // ADMINISTRATIVE INTERFACE
     public boolean addFlight(int xid, String flightNum, int numSeats, int price)
             throws RemoteException,
             TransactionAbortedException,
@@ -58,6 +60,7 @@ public interface ResourceManager extends Remote {
             TransactionAbortedException,
             InvalidTransactionException;
 
+    // QUERY INTERFACE
     public int queryFlight(int xid, String flightNum)
             throws RemoteException,
             TransactionAbortedException,
@@ -93,6 +96,7 @@ public interface ResourceManager extends Remote {
             TransactionAbortedException,
             InvalidTransactionException;
 
+    // RESERVATION INTERFACE
     public boolean reserveFlight(int xid, String custName, String flightNum)
             throws RemoteException,
             TransactionAbortedException,

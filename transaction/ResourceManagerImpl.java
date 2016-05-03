@@ -79,4 +79,29 @@ public class ResourceManagerImpl
         	return true; // We won't ever get here since we exited above;
         	             // but we still need it to please the compiler.
         }
+
+        HashMap<Integer, Transaction> transactions;
+        public boolean addFlight(int xid, String flightNum, int numSeats, int price)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            transactions.get(xid).addResourse(Database.FLIGHT_KEY(flightNum), flightNum, numSeats, price);
+            return true;
+        }
+
+        public boolean addRooms(int xid, String location, int numRooms, int price)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            transactions.get(xid).addResourse(Database.HOTEL_KEY(location), location, numRooms, price);
+            return true;
+        }
+
+        public boolean addCars(int xid, String location, int numCars, int price)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            transactions.get(xid).addResourse(Database.Car_KEY(location), location, numCars, price);
+            return true;
+        }
 }

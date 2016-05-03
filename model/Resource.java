@@ -3,10 +3,27 @@ package model;
 import java.io.Serializable;
 
 public class Resource implements Serializable{
-    private String id;
+    private String id; //flight number or location
     private int price;
     private int size;
     private int avail;
+    private boolean isdeleted;
+
+    public Resource(String id, int price, int size) {
+        this.id = id;
+        this.price = price;
+        this.size = size;
+        this.avail = size;
+        this.isDelete = false;
+    }
+
+    public Resource(Resource rs){
+        this.id = rs.id;
+        this.price = rs.price;
+        this.size = rs.size;
+        this.avail = rs.avail;
+        this.isDelete = rs.isDelete;
+    }
 
     public String getId() {
         return id;
@@ -40,18 +57,18 @@ public class Resource implements Serializable{
         this.avail = avail;
     }
 
-    public Resource(String id, int price, int size) {
-        this.id = id;
-        this.price = price;
-        this.size = size;
-        this.avail = size;
+    public boolean isDelete() {
+        return isdeleted;
     }
 
-    public Resource(Resource rs){
-        this.id = rs.id;
-        this.price = rs.price;
-        this.size = rs.size;
-        this.avail = rs.avail;
+    public void delete() {
+        isdeleted = true;
     }
 
+    //positive value to add, negative value to minus
+    public void update(int newPrice, int sizeChange=0) {
+        this.price = newPrice;
+        this.size += sizeChange;
+        this.avail += sizeChange;
+    }
 }
