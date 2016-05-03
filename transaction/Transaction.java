@@ -49,28 +49,60 @@ public class Transaction {
         Object obj = null;
         if (updates.containKey(key))
             obj = updates.get(key);
-        else if (activeDB.isContain(key)) 
+        else if (activeDB.containKey(key)) 
             obj = activeDB.get(key);
         return obj;
     }
 
-    public boolean addResourse(String key, String id, int size, int price) throws TransactionAbortedException {
+    public boolean addResource(String key, String id, int size, int price) throws TransactionAbortedException {
+        Resource resource = readObj(key);
         try {
             lockmgr.lock(this.id, key, LockManager.WRITE);
-            Resourse resourse = readObj(key);
-            if(resourse) { //update existing DB entries
-                resourse.update(newPrice=price, sizeChange=size);
+            if(resource) { //update existing DB entries
+                resource.update(newPrice=price, sizeChange=size);
             }
             else {
-                resourse = new Resourse(id, price, size); //add new DB entry
+                resource = new Resource(id, price, size); //add new DB entry
             }
-            updates.put(key, resourse);
+            updates.put(key, resource);
         } catch (DeadlockException e) {
             lockmgr.unlockAll(this.id);
-            throw new TransactionAbortedException(this.id,"add resourse failed");
+            throw new TransactionAbortedException(this.id,"add resource failed");
         }
         return true;
     }
 
+    public boolean subResource(String key, int subNum) throws TransactionAbortedException {
+        Resource resource = readObj(key);
+        if(!resource)
+            return false;
+        try {
+            lockmgr.lock(this.id, key, LockManager.WRITE);
+            int newAvail = resource.getAvail() - subNum;
+            if (newAvail < 0) {
+                lockmgr.unlockAll(this.id);
+                return false;
+            }
+            resource.setAvail(newAvail);
+            updates.put(key, resource);
+        } catch (DeadlockException e) {
+            throw new TransactionAbortedException(this.id,"substract resource failed");
+        }
+        return true;
     }
+    
+    public boolean deleteResource(String key) throws TransactionAbortedException {
+        Resource resource = readObj(key);
+        if(!resource)
+            return false;  
+        try {
+            lockmgr.lock(this.id, key, LockManager.WRITE);
+            resource.delete(); //set isdeleted to be true
+            updates.put(key, resource);
+        } catch (DeadlockException e) {
+            throw new TransactionAbortedException(this.id,"delete resource failed");
+        }
+        return true;    
+    }
+
 }

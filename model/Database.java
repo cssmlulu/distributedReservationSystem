@@ -44,7 +44,7 @@ public class Database implements Serializable {
         db.delete(key);
     }
 
-    public boolean isContain(String key) {
+    public boolean containKey(String key) {
         return db.containsKey(String key);
     }
 }

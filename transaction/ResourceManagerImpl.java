@@ -85,23 +85,42 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            transactions.get(xid).addResourse(Database.FLIGHT_KEY(flightNum), flightNum, numSeats, price);
-            return true;
+            return transactions.get(xid).addResource(Database.FLIGHT_KEY(flightNum), flightNum, numSeats, price);
+        }
+
+        public boolean deleteFlight(int xid, String flightNum) 
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            return transactions.get(xid).deleteResource(Database.FLIGHT_KEY(flightNum));
         }
 
         public boolean addRooms(int xid, String location, int numRooms, int price)
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            transactions.get(xid).addResourse(Database.HOTEL_KEY(location), location, numRooms, price);
-            return true;
+            return transactions.get(xid).addResource(Database.HOTEL_KEY(location), location, numRooms, price);
         }
+
+        public boolean deleteRooms(int xid, String location, int numRooms)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            return transactions.get(xid).subResource(Database.HOTEL_KEY(location), numRooms);
+        }
+
 
         public boolean addCars(int xid, String location, int numCars, int price)
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            transactions.get(xid).addResourse(Database.Car_KEY(location), location, numCars, price);
-            return true;
+            return transactions.get(xid).addResource(Database.Car_KEY(location), location, numCars, price);
+        }
+
+        public boolean deleteCars(int xid, String location, int numCars)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            return transactions.get(xid).subResource(Database.CAR_KEY(location), numCars);
         }
 }
