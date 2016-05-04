@@ -14,7 +14,7 @@ public class Resource implements Serializable{
         this.price = price;
         this.size = size;
         this.avail = size;
-        this.isDelete = false;
+        this.isdeleted = false;
     }
 
     public Resource(Resource rs){
@@ -22,7 +22,7 @@ public class Resource implements Serializable{
         this.price = rs.price;
         this.size = rs.size;
         this.avail = rs.avail;
-        this.isDelete = rs.isDelete;
+        this.isdeleted = rs.isdeleted;
     }
 
     public String getId() {
@@ -66,7 +66,7 @@ public class Resource implements Serializable{
     }
 
     //positive value to add, negative value to minus
-    public void update(int newPrice, int sizeChange=0) {
+    public void update(int newPrice, int sizeChange) {
         this.price = newPrice;
         this.size += sizeChange;
         this.avail += sizeChange;

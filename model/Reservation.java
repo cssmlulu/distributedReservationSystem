@@ -22,7 +22,7 @@ public class Reservation {
         this.resvKey = resvKey;
     }
 
-    public void delete {
+    public void delete() {
         this.isdeleted = true;
     }
 }

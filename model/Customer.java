@@ -14,7 +14,7 @@ public class Customer implements Serializable{
         reservations = new ArrayList<Reservation>();
     }
 
-    public void delete {
+    public void delete() {
         this.isdeleted = true;
     }
 }

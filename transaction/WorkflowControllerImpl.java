@@ -47,7 +47,11 @@ public class WorkflowControllerImpl
 
     	while (!reconnect()) {
     	    // would be better to sleep a while
-            Thread.sleep(100);
+            try {
+                Thread.sleep(1000);
+            } catch(InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
     	} 
     }
 
@@ -61,13 +65,13 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException, 
 	       InvalidTransactionException {
-	   return tm.commit();
+	   return tm.commit(xid);
     }
 
     public void abort(int xid)
 	throws RemoteException, 
                InvalidTransactionException {
-	   return tm.abort();
+	   tm.abort(xid);
     }
 
 

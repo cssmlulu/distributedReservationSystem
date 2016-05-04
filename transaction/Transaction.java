@@ -3,6 +3,8 @@ package transaction;
 import model.*;
 import lockmgr.DeadlockException;
 import lockmgr.LockManager;
+import transction.TransactionAbortedException;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,9 +71,9 @@ public class Transaction {
 
     public Object readObj(String key) {
         Object obj = null;
-        if (updates.containKey(key))
+        if (updates.containsKey(key))
             obj = updates.get(key);
-        else if (activeDB.containKey(key)) 
+        else if (activeDB.containsKey(key)) 
             obj = activeDB.get(key);
         return obj;
     }
@@ -80,8 +82,8 @@ public class Transaction {
         Resource resource = (Resource)readObj(key);
         try {
             lockmgr.lock(this.id, key, LockManager.WRITE);
-            if(resource) { //update existing DB entries
-                resource.update(newPrice=price, sizeChange=size);
+            if(resource != null) { //update existing DB entries
+                resource.update(price, size);
             }
             else { // add a new DB entry
                 resource = new Resource(id, price, size); //add new DB entry
@@ -96,13 +98,13 @@ public class Transaction {
 
     public boolean subResource(String key, int subNum) throws TransactionAbortedException {
         Resource resource = (Resource)readObj(key);
-        if(!resource)
+        if(resource == null)
             return false;
         try {
             lockmgr.lock(this.id, key, LockManager.WRITE);
             int newAvail = resource.getAvail() - subNum;
             if (newAvail < 0) {
-                throw new TransactionAbortedException(this.id, "insufficient resources")
+                throw new TransactionAbortedException(this.id, "insufficient resources");
             }
             resource.setAvail(newAvail);
             updates.put(key, resource);
@@ -116,7 +118,7 @@ public class Transaction {
     //TODO: Should fail if a customer has a reservation on this key
     public boolean deleteResource(String key) throws TransactionAbortedException {
         Resource resource = (Resource)readObj(key);
-        if(!resource)
+        if(resource == null)
             return false;  
         try {
             lockmgr.lock(this.id, key, LockManager.WRITE);
@@ -142,12 +144,12 @@ public class Transaction {
 
     public boolean deleteCustomer(String key) throws TransactionAbortedException {
         Customer customer = (Customer)readObj(key);
-        if(!customer) 
+        if(customer == null) 
             return false;
         try {
             lockmgr.lock(this.id, key, LockManager.WRITE);
             customer.delete();
-            updates.put(key, resource);
+            updates.put(key, customer);
         } catch (DeadlockException e) {
             lockmgr.unlockAll(this.id);
             throw new TransactionAbortedException(this.id,"delete customer failed");
@@ -159,7 +161,7 @@ public class Transaction {
         Resource resource = (Resource)readObj(key);
         try {
             lockmgr.lock(this.id, key, LockManager.READ);
-            if(!resource) {
+            if(resource == null) {
                 return -1;
             }
         } catch (DeadlockException e) {
@@ -173,7 +175,7 @@ public class Transaction {
         Resource resource = (Resource)readObj(key);
         try {
             lockmgr.lock(this.id, key, LockManager.READ);
-            if(!resource) {
+            if(resource == null) {
                 return -1;
             }
         } catch (DeadlockException e) {
@@ -188,11 +190,11 @@ public class Transaction {
             lockmgr.lock(this.id, resvKey, LockManager.WRITE);
             lockmgr.lock(this.id, resvKey, LockManager.WRITE);
             
-            if(!readObj(resvKey)) //resource doesn't exist
+            if(readObj(resvKey) == null) //resource doesn't exist
                 return false;
 
             ArrayList<Reservation> reservations = (ArrayList<Reservation>)readObj(custKey);
-            if(!reservations) 
+            if(reservations == null) 
                 reservations = new ArrayList<Reservation>();
 
             Resource resource = (Resource)readObj(resvKey);

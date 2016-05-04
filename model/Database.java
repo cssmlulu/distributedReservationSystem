@@ -1,4 +1,4 @@
-package model
+package model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,10 +45,10 @@ public class Database implements Serializable {
     }
 
     public void delete(String key) {
-        db.delete(key);
+        db.remove(key);
     }
 
-    public boolean containKey(String key) {
-        return db.containsKey(String key);
+    public boolean containsKey(String key) {
+        return db.containsKey(key);
     }
 }

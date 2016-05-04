@@ -99,11 +99,7 @@ public class ResourceManagerImpl
         public void abort(int xid)
                 throws RemoteException,
                 InvalidTransactionException {
-            try {
-                transactions.get(xid).abort();
-            } catch (TransactionAbortedException e) {
-                e.printStackTrace();
-            }
+            transactions.get(xid).abort();
             transactions.remove(xid);
             return;
         }
@@ -143,7 +139,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            return transactions.get(xid).addResource(Database.Car_KEY(location), location, numCars, price);
+            return transactions.get(xid).addResource(Database.CAR_KEY(location), location, numCars, price);
         }
 
         public boolean deleteCars(int xid, String location, int numCars)
@@ -172,7 +168,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            return transactions.get(xid).queryRemaining(Database.FLIGHT_KEY(flightNum));
+            return transactions.get(xid).queryAvail(Database.FLIGHT_KEY(flightNum));
         }
 
         public int queryFlightPrice(int xid, String flightNum)
@@ -186,7 +182,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            return transactions.get(xid).queryRemaining(Database.HOTEL_KEY(location));
+            return transactions.get(xid).queryAvail(Database.HOTEL_KEY(location));
         }
 
         public int queryRoomsPrice(int xid, String location)
@@ -201,7 +197,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            return transactions.get(xid).queryRemaining(Database.CAR_KEY(location));
+            return transactions.get(xid).queryAvail(Database.CAR_KEY(location));
         }
 
         public int queryCarsPrice(int xid, String location)
