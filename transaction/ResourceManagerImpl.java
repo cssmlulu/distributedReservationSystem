@@ -81,6 +81,38 @@ public class ResourceManagerImpl
         }
 
         HashMap<Integer, Transaction> transactions;
+        LockManager lockmgr;
+        // TRANSACTION INTERFACE
+        public int start()
+                throws RemoteException {
+            Transaction trans = new Transaction(lockmgr);
+            transactions.put(trans.getID(), trans);
+            return trans.getID();
+        }
+
+        public boolean commit(int xid)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            transactions.get(xid).commit();
+            transactions.remove(xid);
+            return true;
+        }
+
+        public void abort(int xid)
+                throws RemoteException,
+                InvalidTransactionException {
+            try {
+                transactions.get(xid).abort();
+            } catch (TransactionAbortedException e) {
+                e.printStackTrace();
+            }
+            transactions.remove(xid);
+            return;
+        }
+
+
+        // ADMINISTRATIVE INTERFACE
         public boolean addFlight(int xid, String flightNum, int numSeats, int price)
                 throws RemoteException,
                 TransactionAbortedException,
@@ -123,4 +155,19 @@ public class ResourceManagerImpl
                 InvalidTransactionException {
             return transactions.get(xid).subResource(Database.CAR_KEY(location), numCars);
         }
+
+        public boolean newCustomer(int xid, String custName)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            return transactions.get(xid).newCustomer(Database.CUSTOMER_KEY(custName), custName);
+        }
+
+        public boolean deleteCustomer(int xid, String custName)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            return transactions.get(xid).deleteCustomer(Database.CUSTOMER_KEY(custName));
+        }
 }
+

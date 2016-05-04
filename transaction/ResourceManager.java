@@ -19,6 +19,19 @@ public interface ResourceManager extends Remote {
 	throws RemoteException;
 
     //API for WC
+    // TRANSACTION INTERFACE
+    public int start()
+            throws RemoteException;
+
+    public boolean commit(int xid)
+            throws RemoteException,
+            TransactionAbortedException,
+            InvalidTransactionException;
+
+    public void abort(int xid)
+            throws RemoteException,
+            InvalidTransactionException;
+            
     // ADMINISTRATIVE INTERFACE
     public boolean addFlight(int xid, String flightNum, int numSeats, int price)
             throws RemoteException,

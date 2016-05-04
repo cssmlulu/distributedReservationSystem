@@ -4,6 +4,7 @@ public class Reservation {
 
     private int resvType;
     private String resvKey;
+    private boolean isdeleted = false;
 
     public int getResvType() {
         return resvType;
@@ -15,5 +16,9 @@ public class Reservation {
 
     public Reservation(String reserveKey){
         this.resvKey = resvKey;
+    }
+
+    public void delete {
+        this.isdeleted = true;
     }
 }

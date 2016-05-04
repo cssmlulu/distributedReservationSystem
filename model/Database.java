@@ -8,6 +8,7 @@ public class Database implements Serializable {
     static final String FLIGHT_PREFIX= "Flight.";
     static final String CAR_PREFIX = "Car.";
     static final String HOTEL_PREFIX = "Hotel.";
+    static final String CUSTOMER_PREFIX = "Customer.";
     static final String RESERVATION_PREFIX = "Reservation.";
 
     public enum DatabaseResource { FLIGHT, CAR, HOTEL, RESERVATION };
@@ -23,6 +24,9 @@ public class Database implements Serializable {
     }
     public static String HOTEL_KEY(String key) {
         return HOTEL_PREFIX + key;
+    }
+    public static String CUSTOMER_KEY(String key) {
+        return CUSTOMER_PREFIX + key;
     }
     public static String RESERVATION_KEY(String key) {
         return RESERVATION_PREFIX + key;
