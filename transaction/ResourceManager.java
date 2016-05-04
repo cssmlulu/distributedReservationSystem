@@ -20,9 +20,6 @@ public interface ResourceManager extends Remote {
 
     //API for WC
     // TRANSACTION INTERFACE
-    public int start()
-            throws RemoteException;
-
     public boolean commit(int xid)
             throws RemoteException,
             TransactionAbortedException,

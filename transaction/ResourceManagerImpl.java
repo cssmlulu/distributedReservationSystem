@@ -1,7 +1,10 @@
 package transaction;
 
+import model.*;
 import lockmgr.*;
 import java.rmi.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /** 
  * Resource Manager for the Distributed Travel Reservation System.
@@ -83,12 +86,6 @@ public class ResourceManagerImpl
         HashMap<Integer, Transaction> transactions;
         LockManager lockmgr;
         // TRANSACTION INTERFACE
-        public int start()
-                throws RemoteException {
-            Transaction trans = new Transaction(lockmgr);
-            transactions.put(trans.getID(), trans);
-            return trans.getID();
-        }
 
         public boolean commit(int xid)
                 throws RemoteException,
