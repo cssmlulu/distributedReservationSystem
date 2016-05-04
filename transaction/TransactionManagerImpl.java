@@ -18,7 +18,6 @@ public class TransactionManagerImpl
     extends java.rmi.server.UnicastRemoteObject
     implements TransactionManager {
 
-    HashMap<Integer, Set<ResourceManager>> enlistList;
     public static int idCounter=1;
     
     public static void main(String args[]) {
@@ -42,8 +41,9 @@ public class TransactionManagerImpl
 	}
     }
     
-    
+    HashMap<Integer, Set<ResourceManager>> enlistList;
     public TransactionManagerImpl() throws RemoteException {
+        enlistList = new HashMap<Integer, Set<ResourceManager>>();
     }
 
     public boolean dieNow() 

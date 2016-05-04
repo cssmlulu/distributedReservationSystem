@@ -14,9 +14,6 @@ import java.util.*;
 public class WorkflowControllerImpl
     extends java.rmi.server.UnicastRemoteObject
     implements WorkflowController {
-
-    protected int flightcounter, flightprice, carscounter, carsprice, roomscounter, roomsprice; 
-    protected int xidCounter;
     
     protected ResourceManager rmFlights = null;
     protected ResourceManager rmRooms = null;
@@ -25,62 +22,52 @@ public class WorkflowControllerImpl
     protected TransactionManager tm = null;
 
     public static void main(String args[]) {
-	System.setSecurityManager(new RMISecurityManager());
+    	System.setSecurityManager(new RMISecurityManager());
 
-	String rmiPort = System.getProperty("rmiPort");
-	if (rmiPort == null) {
-	    rmiPort = "";
-	} else if (!rmiPort.equals("")) {
-	    rmiPort = "//:" + rmiPort + "/";
-	}
+    	String rmiPort = System.getProperty("rmiPort");
+    	if (rmiPort == null) {
+    	    rmiPort = "";
+    	} else if (!rmiPort.equals("")) {
+    	    rmiPort = "//:" + rmiPort + "/";
+    	}
 
-	try {
-	    WorkflowControllerImpl obj = new WorkflowControllerImpl();
-	    Naming.rebind(rmiPort + WorkflowController.RMIName, obj);
-	    System.out.println("WC bound");
-	}
-	catch (Exception e) {
-	    System.err.println("WC not bound:" + e);
-	    System.exit(1);
-	}
+    	try {
+    	    WorkflowControllerImpl obj = new WorkflowControllerImpl();
+    	    Naming.rebind(rmiPort + WorkflowController.RMIName, obj);
+    	    System.out.println("WC bound");
+    	}
+    	catch (Exception e) {
+    	    System.err.println("WC not bound:" + e);
+    	    System.exit(1);
+    	}
     }
     
     
     public WorkflowControllerImpl() throws RemoteException {
-	flightcounter = 0;
-	flightprice = 0;
-	carscounter = 0;
-	carsprice = 0;
-	roomscounter = 0;
-	roomsprice = 0;
-	flightprice = 0;
 
-	xidCounter = 1;
-
-	while (!reconnect()) {
-	    // would be better to sleep a while
-	} 
+    	while (!reconnect()) {
+    	    // would be better to sleep a while
+            Thread.sleep(100);
+    	} 
     }
 
 
     // TRANSACTION INTERFACE
-    public int start()
-	throws RemoteException {
-	return (xidCounter++);
+    public int start() throws RemoteException {
+	   return tm.start();
     }
 
     public boolean commit(int xid)
 	throws RemoteException, 
 	       TransactionAbortedException, 
 	       InvalidTransactionException {
-	System.out.println("Committing");
-	return true;
+	   return tm.commit();
     }
 
     public void abort(int xid)
 	throws RemoteException, 
                InvalidTransactionException {
-	return;
+	   return tm.abort();
     }
 
 
@@ -89,68 +76,56 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	flightcounter += numSeats;
-	flightprice = price;
-	return true;
+        return rmFlights.addFlight(xid, flightNum, numSeats, price);
     }
 
     public boolean deleteFlight(int xid, String flightNum)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	flightcounter = 0;
-	flightprice = 0;
-	return true;
+    	return rmFlights.deleteFlight(xid, flightNum);
     }
 		
     public boolean addRooms(int xid, String location, int numRooms, int price) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	roomscounter += numRooms;
-	roomsprice = price;
-	return true;
+        return rmRooms.addRooms(xid, location, numRooms, price);
     }
 
     public boolean deleteRooms(int xid, String location, int numRooms) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	roomscounter = 0;
-	roomsprice = 0;
-	return true;
+        return rmRooms.deleteRooms(xid, location, numRooms);
     }
 
     public boolean addCars(int xid, String location, int numCars, int price) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	carscounter += numCars;
-	carsprice = price;
-	return true;
+        return rmCars.addCars(xid, location, numCars, price);
     }
 
     public boolean deleteCars(int xid, String location, int numCars) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	carscounter = 0;
-	carsprice = 0;
-	return true;
+        return rmCars.deleteCars(xid, location, numCars);
     }
 
     public boolean newCustomer(int xid, String custName) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return true;
+        return rmCustomers.newCustomer(xid, custName);
     }
 
     public boolean deleteCustomer(int xid, String custName) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return true;
+        return rmCustomers.deleteCustomer(xid, custName);   
     }
 
 
@@ -159,49 +134,49 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return flightcounter;
+	    return rmFlights.queryFlight(xid, flightNum);
     }
 
     public int queryFlightPrice(int xid, String flightNum)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return flightprice;
+        return rmFlights.queryFlightPrice(xid, flightNum);
     }
 
     public int queryRooms(int xid, String location)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return roomscounter;
+        return rmRooms.queryRooms(xid, location);
     }
 
     public int queryRoomsPrice(int xid, String location)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return roomsprice;
+        return rmRooms.queryRoomsPrice(xid, location);
     }
 
     public int queryCars(int xid, String location)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return carscounter;
+        return rmCars.queryCars(xid, location);
     }
 
     public int queryCarsPrice(int xid, String location)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return carsprice;
+        return rmCars.queryCarsPrice(xid, location);
     }
 
     public int queryCustomerBill(int xid, String custName)
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	return 0;
+        return rmCustomers.queryCustomerBill(xid, custName);
     }
 
 
@@ -210,31 +185,35 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	flightcounter--;
-	return true;
+        return rmFlights.reserveFlight(xid, custName, flightNum);
     }
  
     public boolean reserveCar(int xid, String custName, String location) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	carscounter--;
-	return true;
+        return rmCars.reserveCar(xid, custName, location);
     }
 
     public boolean reserveRoom(int xid, String custName, String location) 
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-	roomscounter--;
-	return true;
+        return rmRooms.reserveRoom(xid, custName, location);
     }
 
     public boolean reserveItinerary(int xid, String custName, List flightNumList, String location, boolean needCar, boolean needRoom)
-        throws RemoteException,
-	TransactionAbortedException,
-	InvalidTransactionException {
-	return true;
+    throws RemoteException,
+           TransactionAbortedException,
+           InvalidTransactionException {
+        boolean result = true;
+        for (String flightNum : (List<String>)flightNumList)
+            result &= reserveFlight(xid, custName, flightNum);
+        if (needCar)
+            result &= reserveCar(xid, custName, location);
+        if (needRoom)
+            result &= reserveRoom(xid, custName, location);
+        return result;
     }
 
     // TECHNICAL/TESTING INTERFACE
