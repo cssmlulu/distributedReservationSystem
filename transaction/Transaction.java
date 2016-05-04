@@ -102,12 +102,12 @@ public class Transaction {
             lockmgr.lock(this.id, key, LockManager.WRITE);
             int newAvail = resource.getAvail() - subNum;
             if (newAvail < 0) {
-                lockmgr.unlockAll(this.id);
-                return false;
+                throw new TransactionAbortedException(this.id, "insufficient resources")
             }
             resource.setAvail(newAvail);
             updates.put(key, resource);
         } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
             throw new TransactionAbortedException(this.id,"substract resource failed");
         }
         return true;
@@ -123,6 +123,7 @@ public class Transaction {
             resource.delete(); //set isdeleted to be true
             updates.put(key, resource);
         } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
             throw new TransactionAbortedException(this.id,"delete resource failed");
         }
         return true;    
@@ -133,6 +134,7 @@ public class Transaction {
             lockmgr.lock(this.id, key, LockManager.WRITE);
             updates.put(key, new Customer(id));
         } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
             throw new TransactionAbortedException(this.id,"add new customer failed");
         }
         return true;    
@@ -147,8 +149,66 @@ public class Transaction {
             customer.delete();
             updates.put(key, resource);
         } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
             throw new TransactionAbortedException(this.id,"delete customer failed");
         }
         return true;   
+    }
+
+    public int queryPrice(String key) throws TransactionAbortedException {
+        Resource resource = (Resource)readObj(key);
+        try {
+            lockmgr.lock(this.id, key, LockManager.READ);
+            if(!resource) {
+                return -1;
+            }
+        } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
+            throw new TransactionAbortedException(this.id,"query price failed");
+        }
+        return resource.getPrice();
+    }
+
+    public int queryAvail(String key) throws TransactionAbortedException {
+        Resource resource = (Resource)readObj(key);
+        try {
+            lockmgr.lock(this.id, key, LockManager.READ);
+            if(!resource) {
+                return -1;
+            }
+        } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
+            throw new TransactionAbortedException(this.id,"query price failed");
+        }
+        return resource.getAvail();
+    }
+
+    public boolean reserve(String custKey, int resvType, String resvKey) throws TransactionAbortedException {
+        try {
+            lockmgr.lock(this.id, resvKey, LockManager.WRITE);
+            lockmgr.lock(this.id, resvKey, LockManager.WRITE);
+            
+            if(!readObj(resvKey)) //resource doesn't exist
+                return false;
+
+            ArrayList<Reservation> reservations = (ArrayList<Reservation>)readObj(custKey);
+            if(!reservations) 
+                reservations = new ArrayList<Reservation>();
+
+            Resource resource = (Resource)readObj(resvKey);
+            int newAvail = resource.getAvail() - 1;
+            if(newAvail < 0) //check available num
+                return false;
+            resource.setAvail(newAvail);
+
+            reservations.add(new Reservation(resvType, resvKey));
+            updates.put(custKey, reservations);
+            updates.put(resvKey, resource);
+
+        } catch (DeadlockException e) {
+            lockmgr.unlockAll(this.id);
+            throw new TransactionAbortedException(this.id,"reservation failed");
+        }
+        return true;
     }
 }

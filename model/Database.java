@@ -11,7 +11,7 @@ public class Database implements Serializable {
     static final String CUSTOMER_PREFIX = "Customer.";
     static final String RESERVATION_PREFIX = "Reservation.";
 
-    public enum DatabaseResource { FLIGHT, CAR, HOTEL, RESERVATION };
+    // public enum DatabaseResource { FLIGHT, CAR, HOTEL, RESERVATION };
 
     private HashMap<String, Object> db;
     public static int dbCnt = 1;

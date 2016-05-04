@@ -1,6 +1,9 @@
 package model;
 
 public class Reservation {
+    public static final int RESVTYPE_FLIGHT = 1;
+    public static final int RESVTYPE_CAR = 2;
+    public static final int RESVTYPE_HOTEL = 3;
 
     private int resvType;
     private String resvKey;
@@ -14,7 +17,8 @@ public class Reservation {
         return resvKey;
     }
 
-    public Reservation(String reserveKey){
+    public Reservation(int resvType, String reserveKey){
+        this.resvType = resvType;
         this.resvKey = resvKey;
     }
 
