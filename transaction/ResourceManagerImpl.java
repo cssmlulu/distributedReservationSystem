@@ -46,13 +46,29 @@ public class ResourceManagerImpl
         	}
         }
         
-        
+        HashMap<Integer, Transaction> transactions;
+        LockManager lockmgr;       
         public ResourceManagerImpl(String rmiName) throws RemoteException {
         	myRMIName = rmiName;
+            transactions = new HashMap<Integer, Transaction>();
+            lockmgr = new LockManager();
 
         	while (!reconnect()) {
         	    // would be better to sleep a while
+                try {
+                    Thread.sleep(1000);
+                } catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
         	} 
+        }
+
+        void newIdCheck(int xid) throws  RemoteException {
+            if(!transactions.containsKey(xid)) {
+                System.out.println("Add new xid in transaction " + this.myRMIName + " :" + xid);
+                transactions.put(xid, new Transaction(xid, this.lockmgr));
+                tm.enlist(xid, this);
+            }
         }
 
         public boolean reconnect()
@@ -83,8 +99,7 @@ public class ResourceManagerImpl
         	             // but we still need it to please the compiler.
         }
 
-        HashMap<Integer, Transaction> transactions;
-        LockManager lockmgr;
+
         // TRANSACTION INTERFACE
 
         public boolean commit(int xid)
@@ -110,6 +125,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).addResource(Database.FLIGHT_KEY(flightNum), flightNum, numSeats, price);
         }
 
@@ -117,6 +133,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).deleteResource(Database.FLIGHT_KEY(flightNum));
         }
 
@@ -124,6 +141,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).addResource(Database.HOTEL_KEY(location), location, numRooms, price);
         }
 
@@ -131,6 +149,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).subResource(Database.HOTEL_KEY(location), numRooms);
         }
 
@@ -139,6 +158,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).addResource(Database.CAR_KEY(location), location, numCars, price);
         }
 
@@ -146,6 +166,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).subResource(Database.CAR_KEY(location), numCars);
         }
 
@@ -153,6 +174,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).newCustomer(Database.CUSTOMER_KEY(custName), custName);
         }
 
@@ -160,6 +182,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).deleteCustomer(Database.CUSTOMER_KEY(custName));
         }
 
@@ -168,6 +191,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).queryAvail(Database.FLIGHT_KEY(flightNum));
         }
 
@@ -175,6 +199,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).queryPrice(Database.FLIGHT_KEY(flightNum));
         }
 
@@ -182,6 +207,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).queryAvail(Database.HOTEL_KEY(location));
         }
 
@@ -189,6 +215,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).queryPrice(Database.HOTEL_KEY(location));
         }
 
@@ -197,6 +224,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).queryAvail(Database.CAR_KEY(location));
         }
 
@@ -204,6 +232,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             return transactions.get(xid).queryPrice(Database.CAR_KEY(location));
         }
 
@@ -211,6 +240,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             ArrayList<Reservation> reservations = (ArrayList<Reservation>)Transaction.activeDB.get(Database.RESERVATION_KEY(custName));
             int sum = 0;
             for (Reservation r : reservations){
@@ -225,6 +255,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             Transaction trans = transactions.get(xid);
             return trans.reserve(Database.RESERVATION_KEY(custName), Reservation.RESVTYPE_FLIGHT, Database.FLIGHT_KEY(flightNum));
         }
@@ -233,6 +264,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             Transaction trans = transactions.get(xid);
             return trans.reserve(Database.RESERVATION_KEY(custName), Reservation.RESVTYPE_CAR, Database.CAR_KEY(location));
         }
@@ -241,6 +273,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            newIdCheck(xid);
             Transaction trans = transactions.get(xid);
             return trans.reserve(Database.RESERVATION_KEY(custName), Reservation.RESVTYPE_HOTEL, Database.HOTEL_KEY(location));
         }

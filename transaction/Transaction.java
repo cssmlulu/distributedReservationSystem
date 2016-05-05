@@ -3,7 +3,7 @@ package transaction;
 import model.*;
 import lockmgr.DeadlockException;
 import lockmgr.LockManager;
-import transction.TransactionAbortedException;
+import transaction.TransactionAbortedException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -28,14 +28,9 @@ public class Transaction {
 
     //the latest modified copy also stored in memory
     public static Database activeDB;
-    // public static Database shadowDB;
-
-    public static int counter;
 
     static {
         activeDB = new Database();
-        // shadowDB = new Database();
-        counter = 1;
     }
 
     private int id;
@@ -46,9 +41,10 @@ public class Transaction {
     // which stores the latest value of the entry
     private HashMap<String, Object> updates;
 
-    public Transaction(LockManager lockmgr) {
-        this.id = counter++;
+    public Transaction(int xid, LockManager lockmgr) {
+        this.id = xid;
         this.lockmgr = lockmgr;
+        updates = new HashMap<String, Object>();
     }
 
     public void abort() {
@@ -61,9 +57,13 @@ public class Transaction {
         }
 
         DBPointer = switchDB();
-        ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(DBPointer));
-        fout.writeObject(activeDB);
-        fout.close();
+        try {
+            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(DBPointer));
+            fout.writeObject(activeDB);
+            fout.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         lockmgr.unlockAll(this.id);
         return true;

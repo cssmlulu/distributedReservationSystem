@@ -58,7 +58,8 @@ public class WorkflowControllerImpl
 
     // TRANSACTION INTERFACE
     public int start() throws RemoteException {
-	   return tm.start();
+	   int xid = tm.start();
+       return xid;
     }
 
     public boolean commit(int xid)
@@ -80,6 +81,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        // System.out.println("" + xid + flightNum );
         return rmFlights.addFlight(xid, flightNum, numSeats, price);
     }
 

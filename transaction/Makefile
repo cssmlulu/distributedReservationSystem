@@ -13,7 +13,8 @@ server : ResourceManager.class \
          WorkflowControllerImpl.class \
          WorkflowControllerImpl_Stub.class \
          InvalidTransactionException.class \
-         TransactionAbortedException.class
+         TransactionAbortedException.class \
+         Transaction.class
 
 client: Client.class
 
@@ -42,7 +43,7 @@ runclient : client
 	$(PATH)/java -classpath $(PROJECTROOT) -DrmiPort=$(RMIREGPORT) transaction.Client
 
 clean :
-	$(RM) *.class
+	rm *.class
 
 %.class : %.java
 	$(PATH)/javac -classpath $(PROJECTROOT) $<
