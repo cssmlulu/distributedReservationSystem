@@ -242,6 +242,8 @@ public class ResourceManagerImpl
                 InvalidTransactionException {
             newIdCheck(xid);
             ArrayList<Reservation> reservations = (ArrayList<Reservation>)Transaction.activeDB.get(Database.RESERVATION_KEY(custName));
+            if (reservations == null)
+                return 0;
             int sum = 0;
             for (Reservation r : reservations){
                 Resource rsc = (Resource) Transaction.activeDB.get(r.getResvKey());
