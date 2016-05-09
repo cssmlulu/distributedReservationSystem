@@ -14,8 +14,8 @@ public class Transaction {
 
     //Each DBfile has 2 copies on the disk.
     //And the pointer point to the latest modified copy
-    static String DBImage0 = "data/DBImage0";
-    static String DBImage1 = "data/DBImage1";
+    static String DBImage0 = "data/DBImage0.";
+    static String DBImage1 = "data/DBImage1.";
     public static String DBPointer = DBImage1;
     static LockManager lockmgr;
 
@@ -37,35 +37,67 @@ public class Transaction {
     public int getID() {
         return id;
     }
+
+    private String dbType;
+
+    public String getDBPath() {
+        return DBPointer + dbType;
+    }
+
     //Each transction has its own update list
     // which stores the latest value of the entry
     private HashMap<String, Object> updates;
 
-    public Transaction(int xid, LockManager lockmgr) {
+    public Transaction(int xid, LockManager lockmgr, String dbType) {
         this.id = xid;
         this.lockmgr = lockmgr;
+        this.dbType = dbType;
         updates = new HashMap<String, Object>();
     }
 
+    public void recover() {
+        System.out.println("Before recover: " + activeDB.toString());
+        try {
+            ObjectInputStream fin = new ObjectInputStream(new FileInputStream(getDBPath()));
+            activeDB = (Database)fin.readObject();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("After recover: " + activeDB.toString());
+    }
+
     public void abort() {
+        System.out.println("Before abort: " + activeDB.toString());
         lockmgr.unlockAll(this.id);
+        updates.clear();
+        recover();
+        System.out.println("After abort: " + activeDB.toString());
     }
 
     public boolean commit() {
+        System.out.println("Before commit: " + activeDB.toString());
         for (String key : updates.keySet()) {
             activeDB.put(key, updates.get(key));
         }
 
-        DBPointer = switchDB();
+        String tmpDBPointer = switchDB();
         try {
-            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(DBPointer));
+            new File("data").mkdir();
+            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(tmpDBPointer+dbType));
             fout.writeObject(activeDB);
             fout.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        DBPointer = tmpDBPointer;
 
         lockmgr.unlockAll(this.id);
+        updates.clear();
+        System.out.println("After commit: " + activeDB.toString());
         return true;
     }
 

@@ -66,7 +66,7 @@ public class ResourceManagerImpl
         void newIdCheck(int xid) throws  RemoteException {
             if(!transactions.containsKey(xid)) {
                 System.out.println("Add new xid in transaction " + this.myRMIName + " :" + xid);
-                transactions.put(xid, new Transaction(xid, this.lockmgr));
+                transactions.put(xid, new Transaction(xid, this.lockmgr, this.myRMIName));
                 tm.enlist(xid, this);
             }
         }
