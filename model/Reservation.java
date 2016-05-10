@@ -18,7 +18,7 @@ public class Reservation implements Serializable{
         return resvKey;
     }
 
-    public Reservation(int resvType, String reserveKey){
+    public Reservation(int resvType, String resvKey){
         this.resvType = resvType;
         this.resvKey = resvKey;
     }

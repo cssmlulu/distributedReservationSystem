@@ -50,7 +50,7 @@ public class Transaction {
 
     public Transaction(int xid, LockManager lockmgr, String dbType) {
         this.id = xid;
-        this.lockmgr = lockmgr;
+        Transaction.lockmgr = lockmgr;
         this.dbType = dbType;
         updates = new HashMap<String, Object>();
     }
@@ -212,14 +212,14 @@ public class Transaction {
             }
         } catch (DeadlockException e) {
             lockmgr.unlockAll(this.id);
-            throw new TransactionAbortedException(this.id,"query price failed");
+            throw new TransactionAbortedException(this.id,"query avail failed");
         }
         return resource.getAvail();
     }
 
     public boolean reserve(String custKey, int resvType, String resvKey) throws TransactionAbortedException {
         try {
-            lockmgr.lock(this.id, resvKey, LockManager.WRITE);
+            lockmgr.lock(this.id, custKey, LockManager.WRITE);
             lockmgr.lock(this.id, resvKey, LockManager.WRITE);
             
             if(readObj(resvKey) == null) //resource doesn't exist
@@ -238,6 +238,7 @@ public class Transaction {
             reservations.add(new Reservation(resvType, resvKey));
             updates.put(custKey, reservations);
             updates.put(resvKey, resource);
+            System.out.println(custKey + " reserve " + resvKey);
 
         } catch (DeadlockException e) {
             lockmgr.unlockAll(this.id);

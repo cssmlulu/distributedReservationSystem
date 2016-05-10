@@ -51,4 +51,13 @@ public class Database implements Serializable {
     public boolean containsKey(String key) {
         return db.containsKey(key);
     }
+
+    public String toString() {
+        String rst = "";
+        for (String key : db.keySet()) {
+            rst += key;
+            rst += ",";
+        }
+        return rst;
+    }
 }

@@ -44,7 +44,7 @@ public class WorkflowControllerImpl
     
     
     public WorkflowControllerImpl() throws RemoteException {
-
+        idSet = new HashSet<Integer>();
     	while (!reconnect()) {
     	    // would be better to sleep a while
             try {
@@ -55,10 +55,17 @@ public class WorkflowControllerImpl
     	} 
     }
 
+    protected Set<Integer> idSet = null;
+    void checkExist(int xid) throws InvalidTransactionException {
+        if (!idSet.contains(xid)){
+            throw  new InvalidTransactionException(xid, "transaction does not exits");
+        }
+    }
 
     // TRANSACTION INTERFACE
     public int start() throws RemoteException {
 	   int xid = tm.start();
+       idSet.add(xid);
        return xid;
     }
 
@@ -66,13 +73,15 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException, 
 	       InvalidTransactionException {
-	   return tm.commit(xid);
+        checkExist(xid);
+	    return tm.commit(xid);
     }
 
     public void abort(int xid)
 	throws RemoteException, 
                InvalidTransactionException {
-	   tm.abort(xid);
+        checkExist(xid);
+	    tm.abort(xid);
     }
 
 
@@ -81,7 +90,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-        // System.out.println("" + xid + flightNum );
+        checkExist(xid);
         return rmFlights.addFlight(xid, flightNum, numSeats, price);
     }
 
@@ -89,6 +98,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
     	return rmFlights.deleteFlight(xid, flightNum);
     }
 		
@@ -96,6 +106,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmRooms.addRooms(xid, location, numRooms, price);
     }
 
@@ -103,6 +114,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmRooms.deleteRooms(xid, location, numRooms);
     }
 
@@ -110,6 +122,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCars.addCars(xid, location, numCars, price);
     }
 
@@ -117,6 +130,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCars.deleteCars(xid, location, numCars);
     }
 
@@ -124,6 +138,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCustomers.newCustomer(xid, custName);
     }
 
@@ -131,6 +146,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCustomers.deleteCustomer(xid, custName);   
     }
 
@@ -140,6 +156,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
 	    return rmFlights.queryFlight(xid, flightNum);
     }
 
@@ -147,6 +164,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmFlights.queryFlightPrice(xid, flightNum);
     }
 
@@ -154,6 +172,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmRooms.queryRooms(xid, location);
     }
 
@@ -161,6 +180,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmRooms.queryRoomsPrice(xid, location);
     }
 
@@ -168,6 +188,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCars.queryCars(xid, location);
     }
 
@@ -175,6 +196,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCars.queryCarsPrice(xid, location);
     }
 
@@ -182,7 +204,9 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
-        return rmCustomers.queryCustomerBill(xid, custName);
+        checkExist(xid);
+        int sum = rmRooms.queryCustomerBill(xid, custName) + rmCars.queryCustomerBill(xid, custName) + rmFlights.queryCustomerBill(xid, custName);
+        return sum;
     }
 
 
@@ -191,6 +215,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmFlights.reserveFlight(xid, custName, flightNum);
     }
  
@@ -198,6 +223,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmCars.reserveCar(xid, custName, location);
     }
 
@@ -205,6 +231,7 @@ public class WorkflowControllerImpl
 	throws RemoteException, 
 	       TransactionAbortedException,
 	       InvalidTransactionException {
+        checkExist(xid);
         return rmRooms.reserveRoom(xid, custName, location);
     }
 
@@ -212,6 +239,16 @@ public class WorkflowControllerImpl
     throws RemoteException,
            TransactionAbortedException,
            InvalidTransactionException {
+        checkExist(xid);
+        for (String flightNum : (List<String>)flightNumList) {
+            if(queryFlight(xid, flightNum) < 1)
+                return false;
+        }
+        if (needCar & (queryCars(xid, location) < 1))
+            return false;
+        if (needRoom & (queryRooms(xid, location) < 1))
+            return false;
+        
         boolean result = true;
         for (String flightNum : (List<String>)flightNumList)
             result &= reserveFlight(xid, custName, flightNum);
