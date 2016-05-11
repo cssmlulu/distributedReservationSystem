@@ -16,50 +16,53 @@ public class Transaction {
     //And the pointer point to the latest modified copy
     static String DBImage0 = "data/DBImage0.";
     static String DBImage1 = "data/DBImage1.";
-    public static String DBPointer = DBImage1;
+    public static String DBPointer = "data/DBPointer.";
     static LockManager lockmgr;
-
-    static String switchDB() {
-        if(DBPointer == DBImage0) 
-            return DBImage1;
-        else
-            return DBImage0;
-    }
+    public static String dbType;
 
     //the latest modified copy also stored in memory
     public static Database activeDB;
-
-    static {
-        activeDB = new Database();
-    }
+    public static String activeFile;
+    public static String shadowFile;
 
     private int id;
     public int getID() {
         return id;
     }
 
-    private String dbType;
-
-    public String getDBPath() {
-        return DBPointer + dbType;
+    public static String getPath(String path) {
+        return path + dbType;
     }
 
+    public static void recover() {
+        File f = new File(getPath(DBPointer));
+        if (f.exists()) {
+            loadFromFile();
+        }
+        else {            
+            new File("data").mkdir();
+            activeDB = new Database();
+            activeFile = DBImage0;
+            shadowFile = DBImage1;
+        }
+    }
     //Each transction has its own update list
     // which stores the latest value of the entry
     private HashMap<String, Object> updates;
 
-    public Transaction(int xid, LockManager lockmgr, String dbType) {
+    public Transaction(int xid, LockManager lockmgr) {
         this.id = xid;
         Transaction.lockmgr = lockmgr;
-        this.dbType = dbType;
         updates = new HashMap<String, Object>();
     }
 
-    public void recover() {
-        System.out.println("Before recover: " + activeDB.toString());
+    public static void loadFromFile() {
         try {
-            ObjectInputStream fin = new ObjectInputStream(new FileInputStream(getDBPath()));
-            activeDB = (Database)fin.readObject();
+            ObjectInputStream fin = new ObjectInputStream(new FileInputStream(getPath(DBPointer)));
+            activeFile = (String)fin.readObject();
+            shadowFile = (String)fin.readObject();
+            activeDB = (Database) (new ObjectInputStream(new FileInputStream(activeFile))).readObject();
+            fin.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -67,7 +70,6 @@ public class Transaction {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.println("After recover: " + activeDB.toString());
     }
 
     public void abort() {
@@ -82,18 +84,28 @@ public class Transaction {
         System.out.println("Before commit: " + activeDB.toString());
         for (String key : updates.keySet()) {
             activeDB.put(key, updates.get(key));
-        }
+        }   
 
-        String tmpDBPointer = switchDB();
         try {
-            new File("data").mkdir();
-            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(tmpDBPointer+dbType));
+            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));
+            fout.writeObject(activeDB);
+            fout.close();
+
+            String tmpFile = activeFile;
+            activeFile = shadowFile;
+            shadowFile = tmpFile;
+
+            fout = new ObjectOutputStream(new FileOutputStream(getPath(DBPointer)));
+            fout.writeObject(getPath(activeFile));
+            fout.writeObject(getPath(shadowFile));
+            fout.close();
+
+            fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));
             fout.writeObject(activeDB);
             fout.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        DBPointer = tmpDBPointer;
 
         lockmgr.unlockAll(this.id);
         updates.clear();

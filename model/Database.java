@@ -13,8 +13,7 @@ public class Database implements Serializable {
 
     // public enum DatabaseResource { FLIGHT, CAR, ROOM, RESERVATION };
 
-    private HashMap<String, Object> db;
-    public static int dbCnt = 1;
+    private HashMap<String, Object> dbEntries;
 
     public static String FLIGHT_KEY(String key) {
         return FLIGHT_PREFIX + key;
@@ -33,28 +32,36 @@ public class Database implements Serializable {
     }
 
     public Database() {
-        db = new HashMap<String, Object>();
+        dbEntries = new HashMap<String, Object>();
+    }
+
+    public Database(Database db){
+        dbEntries = new HashMap<String, Object>();
+        if (db == null)
+            return;
+        for (String key : db.dbEntries.keySet())
+            dbEntries.put(key, dbEntries.get(key));
     }
 
     public void put(String key, Object value) {
-        db.put(key, value);
+        dbEntries.put(key, value);
     }
 
     public Object get(String key) {
-        return db.get(key);
+        return dbEntries.get(key);
     }
 
     public void delete(String key) {
-        db.remove(key);
+        dbEntries.remove(key);
     }
 
     public boolean containsKey(String key) {
-        return db.containsKey(key);
+        return dbEntries.containsKey(key);
     }
 
     public String toString() {
         String rst = "";
-        for (String key : db.keySet()) {
+        for (String key : dbEntries.keySet()) {
             rst += key;
             rst += ",";
         }

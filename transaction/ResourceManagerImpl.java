@@ -52,6 +52,8 @@ public class ResourceManagerImpl
         	myRMIName = rmiName;
             transactions = new HashMap<Integer, Transaction>();
             lockmgr = new LockManager();
+            Transaction.dbType = this.myRMIName;
+            Transaction.recover();
 
         	while (!reconnect()) {
         	    // would be better to sleep a while
@@ -66,7 +68,7 @@ public class ResourceManagerImpl
         void newIdCheck(int xid) throws  RemoteException {
             if(!transactions.containsKey(xid)) {
                 System.out.println("Add new xid in transaction " + this.myRMIName + " :" + xid);
-                transactions.put(xid, new Transaction(xid, this.lockmgr, this.myRMIName));
+                transactions.put(xid, new Transaction(xid, this.lockmgr));
                 tm.enlist(xid, this);
             }
         }
