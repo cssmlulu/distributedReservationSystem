@@ -79,6 +79,7 @@ public class TransactionManagerImpl
         for (ResourceManager rm : aborts) {
             rm.abort(xid);
         }
+        enlistList.remove(xid);
     }
 
     public boolean enlist(int xid, ResourceManager rm)

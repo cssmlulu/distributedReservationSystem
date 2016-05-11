@@ -233,7 +233,12 @@ public class ResourceManagerImpl
                 TransactionAbortedException,
                 InvalidTransactionException {
             newIdCheck(xid);
-            return transactions.get(xid).queryPrice(Database.CAR_KEY(location));
+            try {
+                return transactions.get(xid).queryPrice(Database.CAR_KEY(location));
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "");
+            }
         }
 
         public int queryCustomerBill(int xid, String custName)
