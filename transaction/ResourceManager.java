@@ -30,94 +30,50 @@ public interface ResourceManager extends Remote {
             InvalidTransactionException;
             
     // ADMINISTRATIVE INTERFACE
-    public boolean addFlight(int xid, String flightNum, int numSeats, int price)
+    public boolean addResource(int xid, String dbKey, String id, int size, int price)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
-    public boolean deleteFlight(int xid, String flightNum)
+    public boolean subResource(int xid, String dbKey, int subNum)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
-    public boolean addRooms(int xid, String location, int numRooms, int price)
+    public boolean deleteResource(int xid, String dbKey) 
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
-    public boolean deleteRooms(int xid, String location, int numRooms)
+    public boolean newCustomer(int xid, String dbCustName)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
-    public boolean addCars(int xid, String location, int numCars, int price)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public boolean deleteCars(int xid, String location, int numCars)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public boolean newCustomer(int xid, String custName)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public boolean deleteCustomer(int xid, String custName)
+    public boolean deleteCustomer(int xid, String dbCustName)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
     // QUERY INTERFACE
-    public int queryFlight(int xid, String flightNum)
+    public int queryAvail(int xid, String dbKey)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
-    public int queryFlightPrice(int xid, String flightNum)
+    public int queryPrice(int xid, String dbKey)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
-    public int queryRooms(int xid, String location)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
 
-    public int queryRoomsPrice(int xid, String location)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public int queryCars(int xid, String location)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public int queryCarsPrice(int xid, String location)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public int queryCustomerBill(int xid, String custName)
+    public int queryCustomerBill(int xid, String dbCustName)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;
 
     // RESERVATION INTERFACE
-    public boolean reserveFlight(int xid, String custName, String flightNum)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public boolean reserveCar(int xid, String custName, String location)
-            throws RemoteException,
-            TransactionAbortedException,
-            InvalidTransactionException;
-
-    public boolean reserveRoom(int xid, String custName, String location)
+    public boolean reserve(int xid, String dbCustName, int resvType, String dbResvKey)
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException;

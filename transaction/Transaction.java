@@ -163,10 +163,10 @@ public class Transaction {
         return true;    
     }
 
-    public boolean newCustomer(String key, String id) throws TransactionAbortedException {
+    public boolean newCustomer(String key) throws TransactionAbortedException {
         try {
             lockmgr.lock(this.id, key, LockManager.WRITE);
-            updates.put(key, new Customer(id));
+            updates.put(key, new Customer(key));
         } catch (DeadlockException e) {
             lockmgr.unlockAll(this.id);
             throw new TransactionAbortedException(this.id,"add new customer failed");

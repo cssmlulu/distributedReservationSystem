@@ -1,5 +1,6 @@
 package transaction;
 
+import model.*;
 import java.rmi.*;
 import java.util.*;
 
@@ -91,7 +92,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmFlights.addFlight(xid, flightNum, numSeats, price);
+        return rmFlights.addResource(xid, Database.FLIGHT_KEY(flightNum), flightNum, numSeats, price);
     }
 
     public boolean deleteFlight(int xid, String flightNum)
@@ -99,7 +100,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-    	return rmFlights.deleteFlight(xid, flightNum);
+    	return rmFlights.deleteResource(xid, Database.FLIGHT_KEY(flightNum));
     }
 		
     public boolean addRooms(int xid, String location, int numRooms, int price) 
@@ -107,7 +108,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmRooms.addRooms(xid, location, numRooms, price);
+        return rmRooms.addResource(xid, Database.ROOM_KEY(location), location, numRooms, price);
     }
 
     public boolean deleteRooms(int xid, String location, int numRooms) 
@@ -115,7 +116,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmRooms.deleteRooms(xid, location, numRooms);
+        return rmRooms.subResource(xid, Database.ROOM_KEY(location), numRooms);
     }
 
     public boolean addCars(int xid, String location, int numCars, int price) 
@@ -123,7 +124,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCars.addCars(xid, location, numCars, price);
+        return rmCars.addResource(xid, Database.CAR_KEY(location), location, numCars, price);
     }
 
     public boolean deleteCars(int xid, String location, int numCars) 
@@ -131,7 +132,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCars.deleteCars(xid, location, numCars);
+        return rmCars.subResource(xid, Database.CAR_KEY(location), numCars);
     }
 
     public boolean newCustomer(int xid, String custName) 
@@ -139,7 +140,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCustomers.newCustomer(xid, custName);
+        return rmCustomers.newCustomer(xid, Database.CUSTOMER_KEY(custName));
     }
 
     public boolean deleteCustomer(int xid, String custName) 
@@ -147,7 +148,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCustomers.deleteCustomer(xid, custName);   
+        return rmCustomers.deleteCustomer(xid, Database.CUSTOMER_KEY(custName));   
     }
 
 
@@ -157,7 +158,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-	    return rmFlights.queryFlight(xid, flightNum);
+	    return rmFlights.queryAvail(xid, Database.FLIGHT_KEY(flightNum));
     }
 
     public int queryFlightPrice(int xid, String flightNum)
@@ -165,7 +166,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmFlights.queryFlightPrice(xid, flightNum);
+        return rmFlights.queryPrice(xid, Database.FLIGHT_KEY(flightNum));
     }
 
     public int queryRooms(int xid, String location)
@@ -173,7 +174,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmRooms.queryRooms(xid, location);
+        return rmRooms.queryAvail(xid, Database.ROOM_KEY(location));
     }
 
     public int queryRoomsPrice(int xid, String location)
@@ -181,7 +182,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmRooms.queryRoomsPrice(xid, location);
+        return rmRooms.queryPrice(xid, Database.ROOM_KEY(location));
     }
 
     public int queryCars(int xid, String location)
@@ -189,7 +190,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCars.queryCars(xid, location);
+        return rmCars.queryAvail(xid, Database.CAR_KEY(location));
     }
 
     public int queryCarsPrice(int xid, String location)
@@ -197,7 +198,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCars.queryCarsPrice(xid, location);
+        return rmCars.queryPrice(xid, Database.CAR_KEY(location));
     }
 
     public int queryCustomerBill(int xid, String custName)
@@ -205,7 +206,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        int sum = rmRooms.queryCustomerBill(xid, custName) + rmCars.queryCustomerBill(xid, custName) + rmFlights.queryCustomerBill(xid, custName);
+        int sum = rmRooms.queryCustomerBill(xid, Database.CUSTOMER_KEY(custName)) + rmCars.queryCustomerBill(xid, Database.CUSTOMER_KEY(custName)) + rmFlights.queryCustomerBill(xid, Database.CUSTOMER_KEY(custName));
         return sum;
     }
 
@@ -216,7 +217,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmFlights.reserveFlight(xid, custName, flightNum);
+        return rmFlights.reserve(xid, Database.CUSTOMER_KEY(custName), Reservation.RESVTYPE_FLIGHT, Database.FLIGHT_KEY(flightNum));
     }
  
     public boolean reserveCar(int xid, String custName, String location) 
@@ -224,7 +225,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmCars.reserveCar(xid, custName, location);
+        return rmCars.reserve(xid, Database.CUSTOMER_KEY(custName), Reservation.RESVTYPE_CAR, Database.CAR_KEY(location));
     }
 
     public boolean reserveRoom(int xid, String custName, String location) 
@@ -232,7 +233,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException,
 	       InvalidTransactionException {
         checkExist(xid);
-        return rmRooms.reserveRoom(xid, custName, location);
+        return rmRooms.reserve(xid, Database.CUSTOMER_KEY(custName), Reservation.RESVTYPE_ROOM, Database.ROOM_KEY(location));
     }
 
     public boolean reserveItinerary(int xid, String custName, List flightNumList, String location, boolean needCar, boolean needRoom)

@@ -137,6 +137,7 @@ public class TPHashTable
                 for (int j = 0; j < vectSlot.size(); j++) {    // walk down single hash slot, adding elements.
                     xobj = (XObj) vectSlot.elementAt(j);
                     hashContents.addElement(xobj);
+                    System.out.println(xobj.toString());
                 }
             }
             // else contributes nothing.

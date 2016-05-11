@@ -47,7 +47,7 @@ public class LockManager
     public boolean lock(int xid, String strData, int lockType)
 	throws DeadlockException 
     {
-    
+        System.out.println("" + xid + " add " + lockType + " lock in " + strData);
         // if any parameter is invalid, then return false
         if (xid < 0) { 
             return false;
@@ -117,7 +117,7 @@ public class LockManager
               // just ignore the redundant lock request
             return true;
         } 
-
+        lockTable.allElements();
         return true;
     }
 
@@ -132,6 +132,7 @@ public class LockManager
      */ 
     public boolean unlockAll(int xid) {
 
+        System.out.println("" + xid + " unlockAll");
         // if any parameter is invalid, then return false
         if (xid < 0) {
             return false;
@@ -220,6 +221,7 @@ public class LockManager
             }
         } 
 
+        lockTable.allElements();
         return true;
     }
 

@@ -121,132 +121,107 @@ public class ResourceManagerImpl
 
 
         // ADMINISTRATIVE INTERFACE
-        public boolean addFlight(int xid, String flightNum, int numSeats, int price)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).addResource(Database.FLIGHT_KEY(flightNum), flightNum, numSeats, price);
-        }
-
-        public boolean deleteFlight(int xid, String flightNum) 
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).deleteResource(Database.FLIGHT_KEY(flightNum));
-        }
-
-        public boolean addRooms(int xid, String location, int numRooms, int price)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).addResource(Database.HOTEL_KEY(location), location, numRooms, price);
-        }
-
-        public boolean deleteRooms(int xid, String location, int numRooms)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).subResource(Database.HOTEL_KEY(location), numRooms);
-        }
-
-
-        public boolean addCars(int xid, String location, int numCars, int price)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).addResource(Database.CAR_KEY(location), location, numCars, price);
-        }
-
-        public boolean deleteCars(int xid, String location, int numCars)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).subResource(Database.CAR_KEY(location), numCars);
-        }
-
-        public boolean newCustomer(int xid, String custName)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).newCustomer(Database.CUSTOMER_KEY(custName), custName);
-        }
-
-        public boolean deleteCustomer(int xid, String custName)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).deleteCustomer(Database.CUSTOMER_KEY(custName));
-        }
-
-        // QUERY INTERFACE
-        public int queryFlight(int xid, String flightNum)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).queryAvail(Database.FLIGHT_KEY(flightNum));
-        }
-
-        public int queryFlightPrice(int xid, String flightNum)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).queryPrice(Database.FLIGHT_KEY(flightNum));
-        }
-
-        public int queryRooms(int xid, String location)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).queryAvail(Database.HOTEL_KEY(location));
-        }
-
-        public int queryRoomsPrice(int xid, String location)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).queryPrice(Database.HOTEL_KEY(location));
-        }
-
-
-        public int queryCars(int xid, String location)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            return transactions.get(xid).queryAvail(Database.CAR_KEY(location));
-        }
-
-        public int queryCarsPrice(int xid, String location)
+        public boolean addResource(int xid, String dbKey, String id, int size, int price)
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
             newIdCheck(xid);
             try {
-                return transactions.get(xid).queryPrice(Database.CAR_KEY(location));
+                return transactions.get(xid).addResource(dbKey,id,size,price);
             } catch (TransactionAbortedException e) {
                 tm.abort(xid);
-                throw new TransactionAbortedException(xid, "");
+                throw new TransactionAbortedException(xid, "addResource error");
             }
         }
 
-        public int queryCustomerBill(int xid, String custName)
+        public boolean deleteResource(int xid, String dbKey) 
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
             newIdCheck(xid);
-            ArrayList<Reservation> reservations = (ArrayList<Reservation>)Transaction.activeDB.get(Database.RESERVATION_KEY(custName));
+            try {
+                return transactions.get(xid).deleteResource(dbKey);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "deleteResource error");
+            }
+        }
+
+        public boolean subResource(int xid, String dbKey, int subNum)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            newIdCheck(xid);
+            try {
+                return transactions.get(xid).subResource(dbKey, subNum);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "subResource error");
+            }
+        }
+
+
+        public boolean newCustomer(int xid, String dbCustName)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            newIdCheck(xid);
+            try {
+                return transactions.get(xid).newCustomer(dbCustName);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "newCustomer error");
+            }
+            
+        }
+
+        public boolean deleteCustomer(int xid, String dbCustName)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            newIdCheck(xid);
+            try {
+                return transactions.get(xid).deleteCustomer(dbCustName);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "deleteCustomer error");
+            }
+        }
+
+        // QUERY INTERFACE
+        public int queryAvail(int xid, String dbKey)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            newIdCheck(xid);
+            try {
+                return transactions.get(xid).queryAvail(dbKey);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "queryAvail error");
+            }            
+        }
+
+        public int queryPrice(int xid, String dbKey)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            newIdCheck(xid);
+            try {
+                return transactions.get(xid).queryPrice(dbKey);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "queryPrice error");
+            }            
+            
+        }
+
+        public int queryCustomerBill(int xid, String dbCustName)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            newIdCheck(xid);
+            ArrayList<Reservation> reservations = (ArrayList<Reservation>)Transaction.activeDB.get(dbCustName);
             if (reservations == null)
                 return 0;
             int sum = 0;
@@ -258,31 +233,18 @@ public class ResourceManagerImpl
         }
 
         // RESERVATION INTERFACE
-        public boolean reserveFlight(int xid, String custName, String flightNum)
+        public boolean reserve(int xid, String dbCustName, int resvType, String dbResvKey)
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
             newIdCheck(xid);
-            Transaction trans = transactions.get(xid);
-            return trans.reserve(Database.RESERVATION_KEY(custName), Reservation.RESVTYPE_FLIGHT, Database.FLIGHT_KEY(flightNum));
-        }
-
-        public boolean reserveCar(int xid, String custName, String location)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            Transaction trans = transactions.get(xid);
-            return trans.reserve(Database.RESERVATION_KEY(custName), Reservation.RESVTYPE_CAR, Database.CAR_KEY(location));
-        }
-
-        public boolean reserveRoom(int xid, String custName, String location)
-                throws RemoteException,
-                TransactionAbortedException,
-                InvalidTransactionException {
-            newIdCheck(xid);
-            Transaction trans = transactions.get(xid);
-            return trans.reserve(Database.RESERVATION_KEY(custName), Reservation.RESVTYPE_HOTEL, Database.HOTEL_KEY(location));
+            try {
+                Transaction trans = transactions.get(xid);
+                return trans.reserve(dbCustName, resvType, dbResvKey);
+            } catch (TransactionAbortedException e) {
+                tm.abort(xid);
+                throw new TransactionAbortedException(xid, "reserve error");
+            } 
         }
 }
 
