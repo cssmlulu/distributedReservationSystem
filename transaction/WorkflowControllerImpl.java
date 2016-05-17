@@ -75,6 +75,7 @@ public class WorkflowControllerImpl
 	       TransactionAbortedException, 
 	       InvalidTransactionException {
         checkExist(xid);
+        System.out.println("WC send commit to tm: " + xid);
 	    return tm.commit(xid);
     }
 
@@ -349,31 +350,133 @@ public class WorkflowControllerImpl
 	return true;
     }
     public boolean dieRMAfterEnlist(String who)
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        if (who.equals(ResourceManager.RMINameFlights)) {
+            try {
+                rmFlights.dieRMAfterEnlist();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameRooms)) {
+            try {
+                rmRooms.dieRMAfterEnlist();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCars)) {
+            try {
+                rmCars.dieRMAfterEnlist();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCustomers)) {
+            try {
+                rmCustomers.dieRMAfterEnlist();
+            } catch (RemoteException e) {}
+        }
+        return true;
     }
     public boolean dieRMBeforePrepare(String who)
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        if (who.equals(ResourceManager.RMINameFlights)) {
+            try {
+                rmFlights.dieRMBeforePrepare();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameRooms)) {
+            try {
+                rmRooms.dieRMBeforePrepare();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCars)) {
+            try {
+                rmCars.dieRMBeforePrepare();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCustomers)) {
+            try {
+                rmCustomers.dieRMBeforePrepare();
+            } catch (RemoteException e) {}
+        }
+        return true;
     }
     public boolean dieRMAfterPrepare(String who)
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        if (who.equals(ResourceManager.RMINameFlights)) {
+            try {
+                rmFlights.dieRMAfterPrepare();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameRooms)) {
+            try {
+                rmRooms.dieRMAfterPrepare();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCars)) {
+            try {
+                rmCars.dieRMAfterPrepare();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCustomers)) {
+            try {
+                rmCustomers.dieRMAfterPrepare();
+            } catch (RemoteException e) {}
+        }
+        return true;
     }
     public boolean dieTMBeforeCommit()
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        tm.dieTMBeforeCommit();
+        return true;
     }
     public boolean dieTMAfterCommit()
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        tm.dieTMAfterCommit();
+        return true;
     }
     public boolean dieRMBeforeCommit(String who)
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        if (who.equals(ResourceManager.RMINameFlights)) {
+            try {
+                rmFlights.dieRMBeforeCommit();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameRooms)) {
+            try {
+                rmRooms.dieRMBeforeCommit();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCars)) {
+            try {
+                rmCars.dieRMBeforeCommit();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCustomers)) {
+            try {
+                rmCustomers.dieRMBeforeCommit();
+            } catch (RemoteException e) {}
+        }
+        return true;
     }
     public boolean dieRMBeforeAbort(String who)
-	throws RemoteException {
-	return true;
+            throws RemoteException {
+        if (who.equals(ResourceManager.RMINameFlights)) {
+            try {
+                rmFlights.dieRMBeforeAbort();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameRooms)) {
+            try {
+                rmRooms.dieRMBeforeAbort();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCars)) {
+            try {
+                rmCars.dieRMBeforeAbort();
+            } catch (RemoteException e) {}
+        }
+        if (who.equals(ResourceManager.RMINameCustomers)) {
+            try {
+                rmCustomers.dieRMBeforeAbort();
+            } catch (RemoteException e) {}
+        }
+        return true;
     }
 }

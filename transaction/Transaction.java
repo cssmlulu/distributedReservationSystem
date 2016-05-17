@@ -61,7 +61,7 @@ public class Transaction {
             ObjectInputStream fin = new ObjectInputStream(new FileInputStream(getPath(DBPointer)));
             activeFile = (String)fin.readObject();
             shadowFile = (String)fin.readObject();
-            activeDB = (Database) (new ObjectInputStream(new FileInputStream(activeFile))).readObject();
+            activeDB = (Database) (new ObjectInputStream(new FileInputStream(getPath(activeFile)))).readObject();
             fin.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -96,8 +96,8 @@ public class Transaction {
             shadowFile = tmpFile;
 
             fout = new ObjectOutputStream(new FileOutputStream(getPath(DBPointer)));
-            fout.writeObject(getPath(activeFile));
-            fout.writeObject(getPath(shadowFile));
+            fout.writeObject(activeFile);
+            fout.writeObject(shadowFile);
             fout.close();
 
             fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));

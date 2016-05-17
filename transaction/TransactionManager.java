@@ -11,10 +11,19 @@ import java.rmi.*;
  */
 
 public interface TransactionManager extends Remote {
+    public boolean xidCheck(int xid)
+            throws RemoteException,
+            InvalidTransactionException,
+            TransactionAbortedException;
 
     public boolean dieNow()
 	       throws RemoteException;
 
+    public void dieTMBeforeCommit()
+        throws RemoteException;
+
+    public void dieTMAfterCommit()
+            throws RemoteException;
 
     /** The RMI name a TransactionManager binds to. */
     public static final String RMIName = "TM";

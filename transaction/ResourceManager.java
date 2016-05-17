@@ -11,12 +11,25 @@ import java.rmi.*;
  */
 
 public interface ResourceManager extends Remote {
-
+    public String getMyRMIName()
+            throws RemoteException;
+            
     public boolean reconnect() 
 	throws RemoteException;
 
     public boolean dieNow() 
 	throws RemoteException;
+
+    public void dieRMAfterEnlist()
+            throws RemoteException;
+    public void dieRMBeforePrepare()
+            throws RemoteException;
+    public void dieRMAfterPrepare()
+            throws RemoteException;
+    public void dieRMBeforeCommit()
+            throws RemoteException;
+    public void dieRMBeforeAbort()
+            throws RemoteException;
 
     //API for WC
     // TRANSACTION INTERFACE

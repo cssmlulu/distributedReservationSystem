@@ -17,6 +17,11 @@ public class ResourceManagerImpl
     implements ResourceManager {
     
         protected String myRMIName = null; // Used to distinguish this RM from other RMs
+        public String getMyRMIName()
+                throws RemoteException {
+            return myRMIName;
+        }
+
         protected TransactionManager tm = null;
 
         public static void main(String args[]) {
@@ -45,6 +50,12 @@ public class ResourceManagerImpl
         	    System.exit(1);
         	}
         }
+
+        protected boolean dieRMAfterEnlist;
+        protected boolean dieRMBeforePrepare;
+        protected boolean dieRMAfterPrepare;
+        protected boolean dieRMBeforeCommit;
+        protected boolean dieRMBeforeAbort;
         
         HashMap<Integer, Transaction> transactions;
         LockManager lockmgr;       
@@ -52,8 +63,14 @@ public class ResourceManagerImpl
         	myRMIName = rmiName;
             transactions = new HashMap<Integer, Transaction>();
             lockmgr = new LockManager();
-            Transaction.dbType = this.myRMIName;
+            Transaction.dbType = myRMIName;
             Transaction.recover();
+
+            dieRMAfterEnlist = false;
+            dieRMBeforePrepare = false;
+            dieRMAfterPrepare = false;
+            dieRMBeforeCommit = false;
+            dieRMBeforeAbort = false;
 
         	while (!reconnect()) {
         	    // would be better to sleep a while
@@ -63,14 +80,6 @@ public class ResourceManagerImpl
                     Thread.currentThread().interrupt();
                 }
         	} 
-        }
-
-        void newIdCheck(int xid) throws  RemoteException {
-            if(!transactions.containsKey(xid)) {
-                System.out.println("Add new xid in transaction " + this.myRMIName + " :" + xid);
-                transactions.put(xid, new Transaction(xid, this.lockmgr));
-                tm.enlist(xid, this);
-            }
         }
 
         public boolean reconnect()
@@ -94,11 +103,22 @@ public class ResourceManagerImpl
         	return true;
         }
 
-        public boolean dieNow() 
-    	throws RemoteException {
-        	System.exit(1);
-        	return true; // We won't ever get here since we exited above;
-        	             // but we still need it to please the compiler.
+
+        void xidCheck(int xid) throws  InvalidTransactionException, RemoteException,
+            TransactionAbortedException {
+            if(!transactions.containsKey(xid)) {
+                if(tm.xidCheck(xid)) {
+                    System.out.println("Add new xid in transaction " + this.myRMIName + " :" + xid);
+                    transactions.put(xid, new Transaction(xid, this.lockmgr));
+                }
+                else {
+                    throw new InvalidTransactionException(xid, "xid is invalid in TM");
+                }
+            }
+
+            tm.enlist(xid, this);
+            if (dieRMAfterEnlist)
+                dieNow();
         }
 
 
@@ -108,6 +128,15 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
+            if (dieRMBeforeCommit)
+                dieNow();
+            if (!transactions.containsKey(xid)) {
+                System.out.println(getMyRMIName() + " died before.");
+                throw new TransactionAbortedException(xid, getMyRMIName() + " died before.");
+            }
+            else {
+                System.out.println("Commit: Current xid: "+xid);
+            }
             transactions.get(xid).commit();
             transactions.remove(xid);
             return true;
@@ -116,6 +145,8 @@ public class ResourceManagerImpl
         public void abort(int xid)
                 throws RemoteException,
                 InvalidTransactionException {
+            if (dieRMBeforeAbort)
+                dieNow();
             transactions.get(xid).abort();
             transactions.remove(xid);
             return;
@@ -127,7 +158,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).addResource(dbKey,id,size,price);
             } catch (TransactionAbortedException e) {
@@ -140,7 +171,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).deleteResource(dbKey);
             } catch (TransactionAbortedException e) {
@@ -153,7 +184,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).subResource(dbKey, subNum);
             } catch (TransactionAbortedException e) {
@@ -167,7 +198,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).newCustomer(dbCustName);
             } catch (TransactionAbortedException e) {
@@ -181,7 +212,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).deleteCustomer(dbCustName);
             } catch (TransactionAbortedException e) {
@@ -195,7 +226,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).queryAvail(dbKey);
             } catch (TransactionAbortedException e) {
@@ -208,7 +239,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 return transactions.get(xid).queryPrice(dbKey);
             } catch (TransactionAbortedException e) {
@@ -222,7 +253,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             ArrayList<Reservation> reservations = (ArrayList<Reservation>)Transaction.activeDB.get(dbCustName);
             if (reservations == null)
                 return 0;
@@ -239,7 +270,7 @@ public class ResourceManagerImpl
                 throws RemoteException,
                 TransactionAbortedException,
                 InvalidTransactionException {
-            newIdCheck(xid);
+            xidCheck(xid);
             try {
                 Transaction trans = transactions.get(xid);
                 return trans.reserve(dbCustName, resvType, dbResvKey);
@@ -247,6 +278,34 @@ public class ResourceManagerImpl
                 tm.abort(xid);
                 throw new TransactionAbortedException(xid, "reserve error");
             } 
+        }
+
+        public boolean dieNow() 
+        throws RemoteException {
+            System.exit(1);
+            return true; // We won't ever get here since we exited above;
+                         // but we still need it to please the compiler.
+        }
+
+        public void dieRMAfterEnlist()
+                throws RemoteException {
+            dieRMAfterEnlist = true;
+        }
+        public void dieRMBeforePrepare()
+                throws RemoteException {
+            dieRMBeforePrepare = true;
+        }
+        public void dieRMAfterPrepare()
+                throws RemoteException {
+            dieRMAfterPrepare = true;
+        }
+        public void dieRMBeforeCommit()
+                throws RemoteException {
+            dieRMBeforeCommit = true;
+        }
+        public void dieRMBeforeAbort()
+                throws RemoteException {
+            dieRMBeforeAbort = true;
         }
 }
 
