@@ -110,15 +110,14 @@ public class ResourceManagerImpl
                 if(tm.xidCheck(xid)) {
                     System.out.println("Add new xid in transaction " + this.myRMIName + " :" + xid);
                     transactions.put(xid, new Transaction(xid, this.lockmgr));
+                    tm.enlist(xid, this);
+                    if (dieRMAfterEnlist)
+                        dieNow();
                 }
                 else {
                     throw new InvalidTransactionException(xid, "xid is invalid in TM");
                 }
             }
-
-            tm.enlist(xid, this);
-            if (dieRMAfterEnlist)
-                dieNow();
         }
 
 

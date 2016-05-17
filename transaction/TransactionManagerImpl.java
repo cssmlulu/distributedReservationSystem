@@ -20,14 +20,6 @@ public class TransactionManagerImpl
     implements TransactionManager {
 
     public static int xidCounter=1;
-    public boolean xidCheck(int xid)
-            throws RemoteException,
-            InvalidTransactionException {
-        if (xid > xidCounter){
-            return false;
-        }
-        return true;
-    }
     
     public static void main(String args[]) {
 	System.setSecurityManager(new RMISecurityManager());
@@ -54,6 +46,14 @@ public class TransactionManagerImpl
     protected boolean dieTMAfterCommit;
     
     HashMap<Integer, Set<ResourceManager>> enlistList;
+    public boolean xidCheck(int xid)
+            throws RemoteException,
+            InvalidTransactionException {
+        if (enlistList.containsKey(xid)){
+            return true;
+        }
+        return false;
+    }
     public TransactionManagerImpl() throws RemoteException {
         enlistList = new HashMap<Integer, Set<ResourceManager>>();
         dieTMBeforeCommit = false;
@@ -72,6 +72,10 @@ public class TransactionManagerImpl
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException {
+        if(!xidCheck(xid))
+            throw new TransactionAbortedException(xid, "invalid xid when commit in TM");
+
+
         System.out.println("TM start commit: " + xid);
         if (dieTMBeforeCommit)
             dieNow();
@@ -83,9 +87,10 @@ public class TransactionManagerImpl
                 if (!rm.commit(xid))
                     return false;
             } catch (Exception e) {
-                enlistList.get(xid).remove(rm);
+                commits.remove(rm);
+                enlistList.put(xid,commits);
                 abort(xid);
-                throw new TransactionAbortedException(xid, "invalid RM");
+                throw new TransactionAbortedException(xid, "invalid RM when commit");
             }
         }
 
@@ -103,6 +108,7 @@ public class TransactionManagerImpl
                 rm.abort(xid);
             } catch (Exception e) {
                 aborts.remove(rm);
+                enlistList.put(xid,aborts);
                 System.out.println("TM abort has invalid RM. Removed in enlistList.");
             }
         }
