@@ -54,6 +54,7 @@ public class Transaction {
         this.id = xid;
         Transaction.lockmgr = lockmgr;
         updates = new HashMap<String, Object>();
+        status = Participant_Status.Initiated;
     }
 
     public static void loadFromFile() {
@@ -72,15 +73,35 @@ public class Transaction {
         }
     }
 
+    enum Participant_Status {
+        Initiated, Prepared, Aborted, Committed
+    }
+    private Participant_Status status;
+
+    public boolean prepare() {
+        if(status == Participant_Status.Initiated) {
+            status = Participant_Status.Prepared;
+            return true;
+        }
+        else {
+            status = Participant_Status.Aborted;
+            return false;
+        }
+    }
+
     public void abort() {
         System.out.println("Before abort: " + activeDB.toString());
         lockmgr.unlockAll(this.id);
         updates.clear();
         recover();
         System.out.println("After abort: " + activeDB.toString());
+        status = Participant_Status.Aborted;
     }
 
     public boolean commit() {
+        if(status != Participant_Status.Prepared)
+            return false;
+
         System.out.println("Before commit: " + activeDB.toString());
         for (String key : updates.keySet()) {
             activeDB.put(key, updates.get(key));
@@ -110,6 +131,7 @@ public class Transaction {
         lockmgr.unlockAll(this.id);
         updates.clear();
         System.out.println("After commit: " + activeDB.toString());
+        status = Participant_Status.Committed;
         return true;
     }
 

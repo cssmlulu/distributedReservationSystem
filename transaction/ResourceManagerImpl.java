@@ -306,5 +306,44 @@ public class ResourceManagerImpl
                 throws RemoteException {
             dieRMBeforeAbort = true;
         }
+
+        public boolean recvPrepare(int xid)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            if(dieRMBeforePrepare)
+                dieNow();
+            //TODO: save the update list to disl
+            if(dieRMAfterPrepare)
+                dieNow();
+
+
+            boolean isPrepared = transactions.get(xid).prepare();
+            if(isPrepared) {
+                //TOOD: write prepared to log
+                return true;
+            }
+            else {
+                //TODO: write abort to log
+                transactions.get(xid).abort();
+                return false;
+            }
+        }
+
+        public boolean recvCommit(int xid)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            //TODO: write commit to log
+            return commit(xid);
+        }
+
+        public void recvAbort(int xid)
+                throws RemoteException,
+                TransactionAbortedException,
+                InvalidTransactionException {
+            //TODO: write abort to log
+            abort(xid);
+        }
 }
 

@@ -42,10 +42,15 @@ public class TransactionManagerImpl
 	}
     }
 
+    enum Coordinator_Status {
+        Initiated, Prepared, Aborted, Committed
+    }
+
     protected boolean dieTMBeforeCommit;
     protected boolean dieTMAfterCommit;
     
-    HashMap<Integer, Set<ResourceManager>> enlistList;
+    private HashMap<Integer, Set<ResourceManager>> enlistList;
+    private HashMap<Integer, Coordinator_Status> transactionStatus;
     public boolean xidCheck(int xid)
             throws RemoteException,
             InvalidTransactionException {
@@ -56,6 +61,7 @@ public class TransactionManagerImpl
     }
     public TransactionManagerImpl() throws RemoteException {
         enlistList = new HashMap<Integer, Set<ResourceManager>>();
+        transactionStatus = new HashMap<Integer, Coordinator_Status>();
         dieTMBeforeCommit = false;
         dieTMAfterCommit = false;
     }
@@ -65,6 +71,7 @@ public class TransactionManagerImpl
     public int start()
             throws RemoteException {
         enlistList.put(xidCounter, new HashSet<ResourceManager>());
+        transactionStatus.put(xidCounter, Coordinator_Status.Initiated);
         return xidCounter++;
     }
 
@@ -72,19 +79,38 @@ public class TransactionManagerImpl
             throws RemoteException,
             TransactionAbortedException,
             InvalidTransactionException {
-        if(!xidCheck(xid))
+        System.out.println("TM start commit: " + xid);
+        if(!xidCheck(xid) || (transactionStatus.get(xid) != Coordinator_Status.Initiated))
             throw new TransactionAbortedException(xid, "invalid xid when commit in TM");
 
+        Set<ResourceManager> commits = enlistList.get(xid);
 
-        System.out.println("TM start commit: " + xid);
+        for (ResourceManager rm : commits) {
+            try {
+                System.out.println("TM send prepare " + xid + " to " + rm.getMyRMIName());
+                if (!rm.recvPrepare(xid)) {
+                    //TODO: wrtie abort to log
+                    abort(xid);
+                    transactionStatus.put(xid, Coordinator_Status.Aborted);
+                    return false;
+                }
+            } catch (Exception e) {
+                commits.remove(rm);
+                enlistList.put(xid,commits);
+                abort(xid);
+                throw new TransactionAbortedException(xid, "invalid RM when prepare");
+            }
+        }
+        transactionStatus.put(xid, Coordinator_Status.Prepared);
+        
+
         if (dieTMBeforeCommit)
             dieNow();
 
-        Set<ResourceManager> commits = enlistList.get(xid);
         for (ResourceManager rm : commits) {
             try {
                 System.out.println("TM send commit " + xid + " to " + rm.getMyRMIName());
-                if (!rm.commit(xid))
+                if (!rm.recvCommit(xid))
                     return false;
             } catch (Exception e) {
                 commits.remove(rm);
@@ -93,9 +119,11 @@ public class TransactionManagerImpl
                 throw new TransactionAbortedException(xid, "invalid RM when commit");
             }
         }
+        transactionStatus.put(xid, Coordinator_Status.Committed);
 
         if (dieTMAfterCommit)
             dieNow();
+
         return true;
     }
 
@@ -105,7 +133,7 @@ public class TransactionManagerImpl
         Set<ResourceManager> aborts= enlistList.get(xid);
         for (ResourceManager rm : aborts) {
             try {
-                rm.abort(xid);
+                rm.recvAbort(xid);
             } catch (Exception e) {
                 aborts.remove(rm);
                 enlistList.put(xid,aborts);
@@ -113,6 +141,7 @@ public class TransactionManagerImpl
             }
         }
         enlistList.remove(xid);
+        transactionStatus.put(xid, Coordinator_Status.Aborted);
     }
 
     public boolean enlist(int xid, ResourceManager rm)
@@ -144,4 +173,5 @@ public class TransactionManagerImpl
             throws RemoteException {
         dieTMAfterCommit = true;
     }
+
 }

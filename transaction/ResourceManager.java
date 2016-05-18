@@ -31,6 +31,22 @@ public interface ResourceManager extends Remote {
     public void dieRMBeforeAbort()
             throws RemoteException;
 
+    //API for TM
+    public boolean recvPrepare(int xid)
+            throws RemoteException,
+            TransactionAbortedException,
+            InvalidTransactionException;
+
+    public boolean recvCommit(int xid)
+            throws RemoteException,
+            TransactionAbortedException,
+            InvalidTransactionException;
+
+    public void recvAbort(int xid)
+            throws RemoteException,
+            TransactionAbortedException,
+            InvalidTransactionException;
+
     //API for WC
     // TRANSACTION INTERFACE
     public boolean commit(int xid)
