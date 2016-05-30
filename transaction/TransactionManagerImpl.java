@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
-
+import java.io.*;
 
 /** 
  * Transaction Manager for the Distributed Travel Reservation System.
@@ -48,6 +48,7 @@ public class TransactionManagerImpl
 
     protected boolean dieTMBeforeCommit;
     protected boolean dieTMAfterCommit;
+    static String backupFilePath = "data/TM.backup";
     
     private HashMap<Integer, Set<ResourceManager>> enlistList;
     private HashMap<Integer, Coordinator_Status> transactionStatus;
@@ -59,11 +60,59 @@ public class TransactionManagerImpl
         }
         return false;
     }
-    public TransactionManagerImpl() throws RemoteException {
+    public TransactionManagerImpl() 
+            throws RemoteException,
+            TransactionAbortedException,
+            InvalidTransactionException {
         enlistList = new HashMap<Integer, Set<ResourceManager>>();
         transactionStatus = new HashMap<Integer, Coordinator_Status>();
         dieTMBeforeCommit = false;
         dieTMAfterCommit = false;
+
+        File backupFile = new File(backupFilePath);
+        if(!backupFile.exists())
+            return;
+        try {
+            ObjectInputStream fin = new ObjectInputStream(new FileInputStream(backupFilePath));
+            enlistList = (HashMap<Integer, Set<ResourceManager>>) fin.readObject();
+            transactionStatus = (HashMap<Integer, Coordinator_Status>) fin.readObject();
+            fin.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        for (Integer xid : transactionStatus.keySet()) {
+            if( xid > xidCounter) {
+                xidCounter = xid + 1;
+            }
+            Coordinator_Status status = transactionStatus.get(xid);
+            if ((status == Coordinator_Status.Committed) || (status == Coordinator_Status.Aborted)) {
+                enlistList.remove(xid);
+            }
+
+            else if (status == Coordinator_Status.Initiated) {
+                commit(xid);
+            }
+
+            else if (status == Coordinator_Status.Prepared) {
+                Set<ResourceManager> commits = enlistList.get(xid);
+                for (ResourceManager rm : commits) {
+                    try {
+                        System.out.println("TM send commit " + xid + " to " + rm.getMyRMIName());
+                        if (!rm.recvCommit(xid))
+                            return;
+                    } catch (Exception e) {
+                        commits.remove(rm);
+                        enlistList.put(xid,commits);
+                        abort(xid);
+                        throw new TransactionAbortedException(xid, "invalid RM when commit");
+                    }
+                }
+                transactionStatus.put(xid, Coordinator_Status.Committed);
+                enlistList.remove(xid);
+            }
+
+        }
     }
 
 
@@ -107,7 +156,15 @@ public class TransactionManagerImpl
         if (dieTMBeforeCommit)
             dieNow();
 
-        System.out.println("" + xid + " committed");
+        try {
+            System.out.println("" + xid + " committed");
+            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(backupFilePath));
+            fout.writeObject(enlistList);
+            fout.writeObject(transactionStatus);
+            fout.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (dieTMAfterCommit)
             dieNow();
@@ -126,6 +183,15 @@ public class TransactionManagerImpl
         }
         transactionStatus.put(xid, Coordinator_Status.Committed);
         enlistList.remove(xid);
+        try {
+            System.out.println("" + xid + " committed");
+            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(backupFilePath));
+            fout.writeObject(enlistList);
+            fout.writeObject(transactionStatus);
+            fout.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
