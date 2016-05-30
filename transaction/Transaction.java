@@ -17,6 +17,7 @@ public class Transaction {
     static String DBImage0 = "data/DBImage0.";
     static String DBImage1 = "data/DBImage1.";
     public static String DBPointer = "data/DBPointer.";
+    public static String UpdateList = "data/UpdateList.";
     static LockManager lockmgr;
     public static String dbType;
 
@@ -35,8 +36,8 @@ public class Transaction {
     }
 
     public static void recover() {
-        File f = new File(getPath(DBPointer));
-        if (f.exists()) {
+        File dbFile = new File(getPath(DBPointer));
+        if (dbFile.exists()) {
             loadFromFile();
         }
         else {            
@@ -73,6 +74,40 @@ public class Transaction {
         }
     }
 
+    private void storeDB() {
+        try {
+            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));
+            fout.writeObject(activeDB);
+            fout.close();
+
+            String tmpFile = activeFile;
+            activeFile = shadowFile;
+            shadowFile = tmpFile;
+
+            fout = new ObjectOutputStream(new FileOutputStream(getPath(DBPointer)));
+            fout.writeObject(activeFile);
+            fout.writeObject(shadowFile);
+            fout.close();
+
+            fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));
+            fout.writeObject(activeDB);
+            fout.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void storeUpdateList() {
+        try {
+                String updateListPath = getPath(UpdateList) + "." + this.id;
+                ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(updateListPath));
+                fout.writeObject(updates);
+                fout.close();
+            }  catch (IOException e) {
+                e.printStackTrace();
+            }
+    }
+
     enum Participant_Status {
         Initiated, Prepared, Aborted, Committed
     }
@@ -80,6 +115,7 @@ public class Transaction {
 
     public boolean prepare() {
         if(status == Participant_Status.Initiated) {
+            storeUpdateList();
             status = Participant_Status.Prepared;
             return true;
         }
@@ -107,26 +143,7 @@ public class Transaction {
             activeDB.put(key, updates.get(key));
         }   
 
-        try {
-            ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));
-            fout.writeObject(activeDB);
-            fout.close();
-
-            String tmpFile = activeFile;
-            activeFile = shadowFile;
-            shadowFile = tmpFile;
-
-            fout = new ObjectOutputStream(new FileOutputStream(getPath(DBPointer)));
-            fout.writeObject(activeFile);
-            fout.writeObject(shadowFile);
-            fout.close();
-
-            fout = new ObjectOutputStream(new FileOutputStream(getPath(shadowFile)));
-            fout.writeObject(activeDB);
-            fout.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        storeDB();
 
         lockmgr.unlockAll(this.id);
         updates.clear();

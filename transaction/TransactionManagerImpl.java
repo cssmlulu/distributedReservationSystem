@@ -130,6 +130,7 @@ public class TransactionManagerImpl
     public void abort(int xid)
             throws RemoteException,
             InvalidTransactionException {
+        System.out.println("TM try to abort " + xid);
         Set<ResourceManager> aborts= enlistList.get(xid);
         for (ResourceManager rm : aborts) {
             try {
@@ -154,6 +155,7 @@ public class TransactionManagerImpl
             rmSet.add(rm);
             enlistList.put(xid, rmSet);
         }
+        System.out.println("Add " + xid + " in " + rm.getMyRMIName());
         return true;
     }
 

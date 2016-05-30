@@ -80,6 +80,7 @@ public class ResourceManagerImpl
                     Thread.currentThread().interrupt();
                 }
         	} 
+            printTransactions();
         }
 
         public boolean reconnect()
@@ -313,12 +314,11 @@ public class ResourceManagerImpl
                 InvalidTransactionException {
             if(dieRMBeforePrepare)
                 dieNow();
-            //TODO: save the update list to disl
+            boolean isPrepared = transactions.get(xid).prepare();
             if(dieRMAfterPrepare)
                 dieNow();
 
 
-            boolean isPrepared = transactions.get(xid).prepare();
             if(isPrepared) {
                 //TOOD: write prepared to log
                 return true;
@@ -344,6 +344,15 @@ public class ResourceManagerImpl
                 InvalidTransactionException {
             //TODO: write abort to log
             abort(xid);
+        }
+
+        //print current transactions in this RM
+        public void printTransactions() throws RemoteException {
+            System.out.print("Current transactions in " + getMyRMIName() + " :");
+            for (Integer xid : transactions.keySet()) {
+                System.out.print(" " + xid + ",");
+            }
+            System.out.print("\n");
         }
 }
 
