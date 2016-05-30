@@ -5,6 +5,9 @@ import lockmgr.*;
 import java.rmi.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.io.*;
 
 /** 
  * Resource Manager for the Distributed Travel Reservation System.
@@ -57,8 +60,9 @@ public class ResourceManagerImpl
         protected boolean dieRMBeforeCommit;
         protected boolean dieRMBeforeAbort;
         
-        HashMap<Integer, Transaction> transactions;
-        LockManager lockmgr;       
+        private HashMap<Integer, Transaction> transactions;
+        private LockManager lockmgr;   
+        private String transFilePath;    
         public ResourceManagerImpl(String rmiName) throws RemoteException {
         	myRMIName = rmiName;
             transactions = new HashMap<Integer, Transaction>();
@@ -79,7 +83,9 @@ public class ResourceManagerImpl
                 } catch(InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 }
-        	} 
+        	}
+            transFilePath =  "data/trans." + myRMIName;
+            loadTransactions();
             printTransactions();
         }
 
@@ -121,7 +127,41 @@ public class ResourceManagerImpl
             }
         }
 
+        private void storeTransactions() {
+            try {
+                    // String transFilePath = "data/trans." + myRMIName;
+                    ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(transFilePath));
+                    Set keySet = new HashSet(transactions.keySet());
+                    fout.writeObject(keySet);
+                    fout.close();
+                }  catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }
 
+        private void loadTransactions() {
+            // String transFilePath = "data/trans." + myRMIName;
+            File transFile = new File(transFilePath);
+            if(!transFile.exists())
+                return;
+            try {
+                ObjectInputStream fin = new ObjectInputStream(new FileInputStream(transFilePath));
+                Set<Integer> transKeys = (Set<Integer>)fin.readObject();
+                fin.close();
+                for(Integer xid: transKeys) {
+                    Transaction trans = new Transaction(xid, lockmgr);
+                    trans.loadUpdateList();
+                    transactions.put(xid,trans);
+                    tm.enlist(xid, this);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
         // TRANSACTION INTERFACE
 
         public boolean commit(int xid)
@@ -139,6 +179,7 @@ public class ResourceManagerImpl
             }
             transactions.get(xid).commit();
             transactions.remove(xid);
+            storeTransactions();
             return true;
         }
 
@@ -149,6 +190,7 @@ public class ResourceManagerImpl
                 dieNow();
             transactions.get(xid).abort();
             transactions.remove(xid);
+            storeTransactions();
             return;
         }
 
@@ -315,6 +357,7 @@ public class ResourceManagerImpl
             if(dieRMBeforePrepare)
                 dieNow();
             boolean isPrepared = transactions.get(xid).prepare();
+            storeTransactions();
             if(dieRMAfterPrepare)
                 dieNow();
 

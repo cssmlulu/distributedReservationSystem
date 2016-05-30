@@ -107,6 +107,11 @@ public class TransactionManagerImpl
         if (dieTMBeforeCommit)
             dieNow();
 
+        System.out.println("" + xid + " committed");
+
+        if (dieTMAfterCommit)
+            dieNow();
+
         for (ResourceManager rm : commits) {
             try {
                 System.out.println("TM send commit " + xid + " to " + rm.getMyRMIName());
@@ -120,10 +125,7 @@ public class TransactionManagerImpl
             }
         }
         transactionStatus.put(xid, Coordinator_Status.Committed);
-
-        if (dieTMAfterCommit)
-            dieNow();
-
+        enlistList.remove(xid);
         return true;
     }
 

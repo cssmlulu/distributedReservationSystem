@@ -38,7 +38,7 @@ public class Transaction {
     public static void recover() {
         File dbFile = new File(getPath(DBPointer));
         if (dbFile.exists()) {
-            loadFromFile();
+            loadDB();
         }
         else {            
             new File("data").mkdir();
@@ -58,7 +58,7 @@ public class Transaction {
         status = Participant_Status.Initiated;
     }
 
-    public static void loadFromFile() {
+    public static void loadDB() {
         try {
             ObjectInputStream fin = new ObjectInputStream(new FileInputStream(getPath(DBPointer)));
             activeFile = (String)fin.readObject();
@@ -101,11 +101,31 @@ public class Transaction {
         try {
                 String updateListPath = getPath(UpdateList) + "." + this.id;
                 ObjectOutputStream fout = new ObjectOutputStream(new FileOutputStream(updateListPath));
+                fout.writeObject(status);
                 fout.writeObject(updates);
                 fout.close();
             }  catch (IOException e) {
                 e.printStackTrace();
             }
+    }
+
+    public void loadUpdateList() {
+        String updateListPath = getPath(UpdateList) + "." + this.id;
+        File updatesFile = new File(updateListPath);
+        if(!updatesFile.exists())
+            return;
+        try {
+            ObjectInputStream fin = new ObjectInputStream(new FileInputStream(updateListPath));
+            status = (Participant_Status)fin.readObject();
+            updates = (HashMap<String, Object>)fin.readObject();
+            fin.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     enum Participant_Status {
@@ -125,10 +145,17 @@ public class Transaction {
         }
     }
 
+    private void clearUpdateList() {
+        updates.clear();
+        String updateListPath = getPath(UpdateList) + "." + this.id;
+        File updatesFile = new File(updateListPath);
+        updatesFile.delete();
+    }
+
     public void abort() {
         System.out.println("Before abort: " + activeDB.toString());
         lockmgr.unlockAll(this.id);
-        updates.clear();
+        clearUpdateList();
         recover();
         System.out.println("After abort: " + activeDB.toString());
         status = Participant_Status.Aborted;
@@ -146,7 +173,7 @@ public class Transaction {
         storeDB();
 
         lockmgr.unlockAll(this.id);
-        updates.clear();
+        clearUpdateList();
         System.out.println("After commit: " + activeDB.toString());
         status = Participant_Status.Committed;
         return true;
